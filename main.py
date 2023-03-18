@@ -1,29 +1,40 @@
+import re
+
 from bs4 import BeautifulSoup
 from selenium import webdriver
 import keyboard
 import time
 
-
 while True:
-    choise = input("Do you want to search for space news or videos? \nNews - for news, videos - for videos: ")
+    choise = input("Do you want to search for space news or videos? \n"
+                   "News - for news, videos - for videos: ")
     if choise == "news" or choise == "News":
         pagecount = int(input("How many pages do you want to parse (max 9)?: "))
         newsFile = open("news.txt", "w", encoding="utf-8")
         driver = webdriver.Chrome()
-
-        for i in range(1, pagecount+1):
+        dictionary = {
+            'class': ['listingResult small result1', 'listingResult small result2', 'listingResult small result3',
+                      'listingResult small result4', 'listingResult small result5', 'listingResult small result6',
+                      'listingResult small result7', 'listingResult small result8', 'listingResult small result9',
+                      'listingResult small result10', 'listingResult small result11', 'listingResult small result12',
+                      'listingResult small result13', 'listingResult small result14', 'listingResult small result15',
+                      'listingResult small result16', 'listingResult small result17', 'listingResult small result18',
+                      'listingResult small result19', 'listingResult small result20', 'listingResult small result21']}
+        for i in range(1, pagecount + 1):
             url = f"https://www.space.com/news/{i}"
             driver.get(url)
             scroll_count = 5
 
             soup = BeautifulSoup(driver.page_source, "html.parser")
-            for news in soup.find_all("a", class_="article-link"):
-                print(news)
-                if 'href' in news.attrs:
-                    newsName = news['aria-label']
-                    newsUrl = news['href']
-                    if "deal" in newsName or newsUrl:
-                        newsFile.write(f"{newsName} | {newsUrl}\n")
+            for articleParent in soup.find_all("div", dictionary):
+                articleDeal = articleParent.find(class_='category-link')
+                if articleDeal is not None:
+                    continue
+                articleChild = articleParent.find("a", class_='article-link')
+                if articleChild is not None and 'href' in articleChild.attrs:
+                    articleName = articleChild['aria-label']
+                    articleUrl = articleChild['href']
+                    newsFile.write(f"{articleName} | {articleUrl}\n")
 
         driver.quit()
         newsFile.close()
