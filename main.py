@@ -1,7 +1,9 @@
 from bs4 import BeautifulSoup
 from selenium import webdriver
 import tkinter as tk
+import requests
 from tkinter import messagebox
+
 
 def update_mode():
     if mode_var.get():
@@ -19,22 +21,30 @@ def update_mode():
         search_button.pack()
         search_button.config(command=search_videos)
 
+
 def search_news():
     pagecount = int(pagecount_entry.get())
+
     if not 1 <= pagecount <= 9:
         messagebox.showerror("Error", "Please enter a number between 1 and 9.")
         return
 
     newsFile = open("news.txt", "w", encoding="utf-8")
-    driver = webdriver.Chrome()
+    dictionary = {
+        'class': ['listingResult small result1', 'listingResult small result2', 'listingResult small result3',
+                  'listingResult small result4', 'listingResult small result5', 'listingResult small result6',
+                  'listingResult small result7', 'listingResult small result8', 'listingResult small result9',
+                  'listingResult small result10', 'listingResult small result11', 'listingResult small result12',
+                  'listingResult small result13', 'listingResult small result14', 'listingResult small result15',
+                  'listingResult small result16', 'listingResult small result17', 'listingResult small result18',
+                  'listingResult small result19', 'listingResult small result20', 'listingResult small result21']}
 
     for i in range(1, pagecount + 1):
         url = f"https://www.space.com/news/{i}"
-        driver.get(url)
-        scroll_count = 5
+        responce = requests.get(url)
 
-        soup = BeautifulSoup(driver.page_source, "html.parser")
-        for articleParent in soup.find_all("div", {"class": "listingResult small"}):
+        soup = BeautifulSoup(responce.content, "html.parser")
+        for articleParent in soup.find_all("div", dictionary):
             articleDeal = articleParent.find(class_='category-link')
             if articleDeal is not None:
                 continue
@@ -44,8 +54,8 @@ def search_news():
                 articleUrl = articleChild['href']
                 newsFile.write(f"{articleName} | {articleUrl}\n")
 
-    driver.quit()
     newsFile.close()
+
 
 def search_videos():
     url = f"https://www.youtube.com/results?search_query={search_entry.get()}"
@@ -64,6 +74,7 @@ def search_videos():
     driver.quit()
     videosFile.close()
 
+
 window = tk.Tk()
 window.title("DaddyScrapeLegs")
 window.geometry("250x150")
@@ -77,7 +88,8 @@ mode_switch = tk.Checkbutton(window, text="Switch mode", variable=mode_var, comm
 mode_switch.pack()
 
 pagecount_entry = tk.Entry(window, width=30, validate="key")
-pagecount_entry.config(validatecommand=(pagecount_entry.register(lambda s: s.isdigit() and int(s) in range(1, 10)), "%P"))
+pagecount_entry.config(validate="key", validatecommand=(
+pagecount_entry.register(lambda s: s.isdigit() and int(s) in range(1, 10) or s == ''), "%P"))
 pagecount_entry.pack()
 
 search_entry = tk.Entry(window, width=30)
